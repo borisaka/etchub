@@ -1,0 +1,6 @@
+confdir /usr/local/etc/privoxy
+logdir /var/log/privoxy
+listen-address 127.0.0.1:8118
+enforce-blocks 1
+filterfile default.filter
+actionsfile policy.action

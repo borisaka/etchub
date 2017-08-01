@@ -1,0 +1,3 @@
+%{"apache_passwd_md5": {:hex, :apache_passwd_md5, "1.0.0", "afd53daac6a375fdd08ce9ab2d6c625afc591b3dc6838009c2f2eb31ae0571f8", [:mix], [], "hexpm"},
+  "htpasswd": {:hex, :htpasswd, "1.0.2", "8f25fe18beee375367137af48321df66231d2b4ca50e61cd6508e312cb11a6ec", [:mix], [{:apache_passwd_md5, "~> 1.0", [hex: :apache_passwd_md5, repo: "hexpm", optional: false]}], "hexpm"},
+  "sshex": {:hex, :sshex, "2.2.0", "354a90b821688a39c0aaac6c25d37445f1bd4dce95ab981841774f3585a76c42", [:mix], [], "hexpm"}}

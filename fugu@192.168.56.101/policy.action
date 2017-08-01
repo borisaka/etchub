@@ -1,0 +1,65 @@
+{ +limit-cookie-lifetime{15} \
+  +session-cookies-only \
+  +change-x-forwarded-for{block} \
+  +client-header-tagger{css-requests} \
+  +client-header-tagger{image-requests} \
+  +client-header-tagger{range-requests} \
+  +hide-from-header{block} \
+  +hide-referrer{conditional-block} \
+  +set-image-blocker{pattern} \
+  +deanimate-gifs{last} \
+  +filter{refresh-tags} \
+  +filter{banners-by-size} \
+  +filter{img-reorder} \
+  +filter{webbugs} \
+  +filter{jumping-windows} \
+  +filter{ie-exploits} \
+  }
+/ 
+{ +forward-override{forward-socks5 127.0.0.1:9050 .} }
+*.onion
+{ +block }
+*.facebook.com
+www.facebook.com
+*google.com
+*adlink.net
+*.amazon.com
+*apple.*
+.adnxs.com
+*flickr.*
+.tynt.com
+*.adhese.com
+.adtrak.net
+.elitemediagroup.net
+.popuptraffic.com
+.hit-now.com
+.valueclick.com
+.cpays.com
+.oxado.com
+.adult*finder.com
+/scripts/cms/xcms.asp
+*vk.*
+*.ru
+*gmail.*
+*google*
+*yahoo.*
+*ymail.*
+.?pix.com
+*doubleclick.net
+*event.ng
+*.alexa.com
+*adobe.*
+&sitestat.com
+tracking.
+*twitter.*
+*youtube.*
+###### RULES
+ad*.
+.*ads.
+.ad.?.
+.ad.[a-ik-z][a-oq-z].
+.ad.jp.*
+.*advert*.
+*banner*.
+*counter.
+metrics.

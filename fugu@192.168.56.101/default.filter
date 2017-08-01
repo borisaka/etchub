@@ -1,0 +1,173 @@
+FILTER: js-annoyances Get rid of particularly annoying JavaScript abuse.
+s|(?:\w+\.)+referrer|false.toString()|gisU
+s@([\W]\s*)((?:this|window)\.(?:default)?status)\s*=\s*((['"]).*?\4)@$1$2 =\
+ (typeof(this.href) != 'undefined')?($3 + ' URL: ' + this.href):($2)@ig
+s/(?:(?:this|window)\.(?:default)?status)\s*=\s*\w*\s*;//ig
+s/(<body\s+[^>]*)onunload/$1never/siU
+s|(<script.*)window\.onunload(?=.*</script>)|$1never|sigU
+s/(open\s*\([^\)]+resizable=)(["']?)(?:no|0)\2/$1$2yes$2/sigU
+s/(open\s*\([^\)]+location=)(["']?)(?:no|0)\2/$1$2yes$2/sigU 
+s/(open\s*\([^\)]+status=)(["']?)(?:no|0)\2/$1$2yes$2/sigU 
+s/(open\s*\([^\)]+scroll(?:ing|bars)=)(["']?)(?:no|0)\2/$1$2auto$2/sigU 
+s/(open\s*\([^\)]+menubar=)(["']?)(?:no|0)\2/$1$2yes$2/sigU 
+s/(open\s*\([^\)]+toolbar=)(["']?)(?:no|0)\2/$1$2yes$2/sigU 
+s/(open\s*\([^\)]+directories=)(["']?)(?:no|0)\2/$1$2yes$2/sigU 
+s/(open\s*\([^\)]+fullscreen=)(["']?)(?:yes|1)\2/$1$2no$2/sigU
+s/(open\s*\([^\)]+always(?:raised|lowered)=)(["']?)(?:yes|1)\2/$1$2no$2/sigU
+s/(open\s*\([^\)]+z-?lock=)(["']?)(?:yes|1)\2/$1$2no$2/sigU
+s/(open\s*\([^\)]+hotkeys=)(["']?)(?:yes|1)\2/$1$2no$2/sigU
+s/(open\s*\([^\)]+titlebar=)(["']?)(?:no|0)\2/$1$2yes$2/sigU
+s/(open\s*\([^\)]+always(?:raised|lowered)=)(["']?)(?:yes|1)\2/$1$2no$2/sigU
+FILTER: js-events Kill JavaScript event bindings and timers (Radically destructive! Only for extra nasty sites).
+s/(on|event\.)((mouse(over|out|down|up|move))|(un)?load|contextmenu|selectstart)/never/ig
+s/(alert|confirm)\s*\(/concat(/ig
+s/set(timeout|interval)\(/concat(/ig
+FILTER: html-annoyances Get rid of particularly annoying HTML abuse.
+s/(<a\s+href[^>]+resizable=)(['"]?)(?:no|0)\2/$1$2yes$2/igU 
+s/(<a\s+href[^>]+location=)(['"]?)(?:no|0)\2/$1$2yes$2/igU 
+s/(<a\s+href[^>]+status=)(['"]?)(?:no|0)\2/$1$2yes$2/igU
+s/(<a\s+href[^>]+scrolling=)(['"]?)(?:no|0)\2/$1$2auto$2/igU
+s/(<a\s+href[^>]+menubar=)(['"]?)(?:no|0)\2/$1$2yes$2/igU
+s-</?(blink|marquee).*>--sigU
+FILTER: content-cookies Kill cookies that come in the HTML or JS content.
+s|(\w+\.)+cookie(?=[ \t\r\n]*=)(?!='aab)|ZappedCookie|ig
+s|<meta\s+http-equiv=['"]?set-cookie.*>|<!-- ZappedCookie -->|igU
+FILTER: refresh-tags Kill automatic refresh tags if refresh time is larger than 9 seconds.
+s@<meta\s+http-equiv\s*=\s*(['"]?)refresh\1\s+content\s*=\s*(['"]?)\d{2,}\s*(;(?:\s*url\s*=\s*)?([^>\2]*))?\2@<link rev="x-refresh" href="$4"@ig
+FILTER: unsolicited-popups Disable only unsolicited pop-up windows.
+s+([^'"]\s*<head.*>)(?=\s*[^'"])+$1<script>function PrivoxyWindowOpen(){return(null);}</script>+isU
+s@([^\w\s.]\s*)((?:map)?(window|this|parent)\.?)?open\s*\(@$1PrivoxyWindowOpen(@ig
+s+([^'"]\s*</html>)(?!\s*(\\n|'|"))+$1<script>function PrivoxyWindowOpen(a, b, c){return(window.open(a, b, c));}</script>+iU     
+FILTER: all-popups Kill all popups in JavaScript and HTML.
+s@((\W\s*)(?:map)?(window|this|parent)\.?)open\s*\\?\(@$1concat(@ig  # JavaScript
+s/\starget\s*=\s*(['"]?)_?(blank|new)\1?/ notarget/ig        # HTML
+s/\starget\s*=\s*(['"]?)_?(blank|new)\1?/ /ig        # (X)HTML
+FILTER: img-reorder Reorder attributes in <img> tags to make the banners-by-* filters more effective.
+s|<img\s+?([^>]*)\ssrc\s*=\s*(['"])([^>'" ]+)\2|<img src=$2$3$2 $1|siUg
+s|<img\s+?([^>]*)\ssrc\s*=\s*([^'">\\\s]+)|<img src=$2 $1|sig
+s|(<img[^>]+height)\s*=\s*|$1=|sig
+s|<img (src=(?:(['"])[^>'" ]*\2\|[^'">\\\s]+?))([^>]*)\s+width\s*=\s*((["']?)\d+?\5)(?=[\s>])|<img $1 width=$4$3|siUg
+FILTER: webbugs Squish WebBugs (1x1 invisible GIFs used for user tracking).
+s@<img[^>]*\s(?:width|height)\s*=\s*['"]?[01](?=\D)[^>]*\s(?:width|height)\s*=\s*['"]?[01](?=\D)[^>]*?>@@siUg
+FILTER: tiny-textforms Extend those tiny textareas up to 40x80 and kill the hard wrap.
+s/(<textarea[^>]*?)(?:\s*(?:rows|cols)=(['"]?)\d+\2)+/$1 rows=$2\40$2 cols=$2\80$2/ig 
+s/(<textarea[^>]*?)wrap=(['"]?)hard\2/$1/ig
+FILTER: jumping-windows Prevent windows from resizing and moving themselves.
+s/(?<=[\W])(?:window|this|self)\.(?:move|resize)(?:to|by)\(/''.concat(/ig
+FILTER: frameset-borders Give frames a border and make them resizable.
+s/(<frameset\s+[^>]*)framespacing=(['"]?)(no|0)\2/$1/igU
+s/(<frameset\s+[^>]*)frameborder=(['"]?)(no|0)\2/$1/igU
+s/(<frameset\s+[^>]*)border=(['"]?)(no|0)\2/$1/igU
+s/(<frame\s+[^>]*)noresize/$1/igU
+s/(<frame\s+[^>]*)frameborder=(['"]?)(no|0)\2/$1/igU 
+s/(<frame\s+[^>]*)scrolling=(['"]?)(no|0)\2/$1/igU
+FILTER: iframes Removes all detected iframes. Should only be enabled for individual sites.
+s@<iframe.*</iframe>@<!-- iframe removed by Privoxy's iframe filter -->@Uisg
+FILTER: shockwave-flash Kill embedded Shockwave Flash objects.
+s|<object [^>]*macromedia.*</object>|<!-- Squished Shockwave Object -->|sigU
+s|<embed [^>]*(application/x-shockwave-flash\|\.swf).*>(.*</embed>)?|<!-- Squished Shockwave Flash Embed -->|sigU
+FILTER: quicktime-kioskmode Make Quicktime movies saveable.
+s/(<embed\s+[^>]*)kioskmode\s*=\s*(["']?)true\2/$1/ig 
+FILTER: fun Text replacements for subversive browsing fun!
+s/microsoft(?!\.[^\s])/MicroSuck/ig
+s* (?:industry|world)[ -]leading \
+|  cutting[ -]edge \
+|  customer[ -]focused \
+|  market[ -]driven \
+|  award[ -]winning # Comments are OK, too! \
+|  high[ -]performance \
+|  solutions[ -]based \
+|  unmatched \
+|  unparalleled \
+|  unrivalled \
+*$0<sup><font color="red"><b>Bingo!</b></font></sup> \
+*igx
+s/(M|m)edien(?![^<]*>)/$1&auml;dchen/Ug
+FILTER: crude-parental Crude parental filtering. Note that this filter doesn't work reliably.
+s%^.*(?<!middle)(?<!sus)(?<!es)sex.*$%<html><head><title>Blocked</title></head><body>\
+<h3>Blocked by Privoxy's crude-parental filter due to possible adult content.</h3></body></html>%is
+s+^.*warez.*$+<html><head><title>No Warez</title></head><body><h3>You're not searching for illegal stuff, are you?</h3></body></html>+is
+s/^.*\
+(?:(suck|lick|tongue|rub|fuck|fingering|finger|chicks?)\s*)?\
+(?:(her|your|my|hard|with|big|wet|tight|pink|hot|moist|young|teen)\s*)+\
+(dicks?|penis|cocks?|balls?|tits?|pussy|cunt|clit|ass|mouth).*$\
+/This page has been blocked by Privoxy's crude-parental content filter\
+/is
+
+s/^.*\
+(download|broadband|view|watch|free|get|extreem)?\s*\
+(sex|xxx|porn|cumshot|fuck(ing|s)?|anal|ass|asian|adult|Amateur|org(y|ies)|close ups?|hand?job|nail(ed)?)+\s*\
+(movies?|pics?|videos?|dvds?|dvd's|links?).*$\
+/This page has been blocked by Privoxy's crude-parental content filter\
+/is
+s/^.*\
+(models?|chicks?|girls?|women|persons)\s*\
+(who|are|were)+ (over|at least) (16|18|21) years (old|of age).*$\
+/This page has been blocked by Privoxy's crude-parental content filter\
+/is
+s/^.*(Section 2257|18 U.?S.?C.? 2257).*$\
+/This page has been blocked by Privoxy's crude-parental content filter\
+/is 
+FILTER: ie-exploits Disable some known Internet Explorer bug exploits.
+s%f\("javascript:location.replace\('mk:@MSITStore:C:'\)"\);%alert\("This page looks like it tries to use a vulnerability described here:\n http://online.securityfocus.com/archive/1/298748/2002-11-02/2002-11-08/2"\);%siU
+s/(<a[^>]*href[^>]*)(?:\x01|\x02|\x03|%0[012])@/$1MALICIOUS-LINK@/ig
+s%<script language="JavaScript">(window\.open|1;''\.concat)\("readme\.eml", null, "resizable=no,top=6000,left=6000"\)</script>%<br><font size="7"> WARNING: This Server is infected with <a href="http://www.cert.org/advisories/CA-2001-26.html">Nimda</a>!</font>%g
+FILTER: no-ping Removes non-standard ping attributes in <a> and <area> tags.
+s@(<a(?:rea)?[^>]*?)\sping=(['"]?)([^"'>]+)\2([>\s]?)@\
+<strong style="color:white; background-color:red;" title="Privoxy removed ping target '$3'">PING!</strong>\n$1$4@ig
+# Do the feed filtering magic as described above.
+s@<title(?:\s+type=\'text\')?>([^<]*)(?:\.\.\.)?\s*</title>\s*\
+(<content(?:\s+type=\'(?:html|text)\')?>\s*\1)@<title></title>$2@ig
+CLIENT-HEADER-FILTER: hide-tor-exit-notation Removes the Tor exit node notation in Host and Referer headers.
+s@^((?:Referer|Host):\s*(?:https?://)?[^/]*)\.[^\./]*?\.exit@$1@i
+#################################################################################
+#
+# less-download-windows: Prevents annoying download windows for content types
+#                        the browser can handle itself.
+#
+#################################################################################
+SERVER-HEADER-FILTER: less-download-windows Prevent annoying download windows for content types the browser can handle itself.
+
+s@^Content-Disposition:.*filename=(["']?).*\.(png|gif|jpe?g|diff?|d?patch|c|h|pl|shar)\1.*$@@i
+s@^(Content-Type:)\s*(?:message/(?:news|rfc822)|text/x-.*|application/x-sh(?:\s|$))\s*@$1 text/plain@i
+
+#################################################################################
+#
+# image-requests: Tags detected image requests as "IMAGE-REQUEST". Whether
+#                 or not the detection actually works depends on the browser.
+#
+#################################################################################
+CLIENT-HEADER-TAGGER: image-requests Tags detected image requests as "IMAGE-REQUEST".
+
+s@^Accept:\s*image/.*@IMAGE-REQUEST@i
+
+CLIENT-HEADER-TAGGER: css-requests Tags detected CSS requests as "CSS-REQUEST".
+s@^Accept:\s*text/css.*@CSS-REQUEST@i
+CLIENT-HEADER-TAGGER: range-requests Tags range requests as "RANGE-REQUEST".
+s@^Range:.*@RANGE-REQUEST@i
+CLIENT-HEADER-TAGGER: client-ip-address Tags the request with the client's IP address.
+s@^\w*\s+.*\s+HTTP/\d\.\d\s*@IP-ADDRESS: $origin@D
+CLIENT-HEADER-TAGGER: listen-address Tags the request with the listen-address on which the request came in.
+s@^\w*\s+.*\s+HTTP/\d\.\d\s*@LISTEN-ADDRESS: $listen-address@D
+CLIENT-HEADER-TAGGER: http-method Tags the request with its HTTP method.
+s@^(\w*).*HTTP/\d\.\d\s*$@$1@i
+CLIENT-HEADER-TAGGER: allow-post Tags POST requests as "ALLOWED-POST".
+s@^(?:POST)\s+.*\s+HTTP/\d\.\d\s*@ALLOWED-POST@i
+CLIENT-HEADER-TAGGER: complete-url Tags the request with the whole request URL.
+s@^\w*\s+(.*)\s+HTTP/\d\.\d\s*$@$1@i
+CLIENT-HEADER-TAGGER: user-agent Tags the request with the complete User-Agent header.
+s@^User-Agent:.*@$0@i
+CLIENT-HEADER-TAGGER: referer Tags the request with the complete Referer header.
+s@^Referer:.*@$0@i
+SERVER-HEADER-TAGGER: content-type Tags the request with the content type declared by the server.
+s@^Content-Type:\s*([^;]+).*@$1@i
+CLIENT-HEADER-TAGGER: privoxy-control Creates tags with the content of X-Privoxy-Control headers.
+s@^X-Privoxy-Control:\s*@@i
+CLIENT-HEADER-FILTER: privoxy-control Removes X-Privoxy-Control headers.
+s@^X-Privoxy-Control:.*@@i
+SERVER-HEADER-TAGGER: privoxy-control Creates tags with the content of X-Privoxy-Control headers.
+s@^X-Privoxy-Control:\s*@@i
+SERVER-HEADER-FILTER: privoxy-control Removes X-Privoxy-Control headers.
+s@^X-Privoxy-Control:.*@@i
+
+
